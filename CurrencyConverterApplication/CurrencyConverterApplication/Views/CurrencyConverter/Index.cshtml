@@ -1,0 +1,164 @@
+﻿@model CurrencyConverterApplication.Models.CurrencyConverterModel
+
+@{
+    Layout = "_Currency";  
+}
+<style>
+   
+    body {
+        background-color: gray; 
+        font-family: Arial, sans-serif; 
+        color: #333; 
+    }
+
+  
+    #currencyDiv {
+        width: 50%; 
+        margin: 0 auto; 
+        padding: 20px; 
+        background-color: rgba(255, 255, 255, 0.8); 
+        border-radius: 8px; 
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+        margin-top: 50px;
+    }
+
+    
+    .form-label {
+        font-weight: bold;
+    }
+
+    .form-control {
+        width: 100%; 
+        margin-bottom: 15px; 
+    }
+
+    
+    #Amount, #FromCurrency, #ToCurrency {
+        width: 50%;
+        margin: 0 auto; 
+    }
+
+    
+    .btn-primary {
+        width: 50%; 
+        margin: 10px auto; 
+        display: block; 
+        background-color: #007bff; 
+        border: none;
+        padding: 10px;
+        color: white;
+        font-size: 16px;
+        border-radius: 5px; 
+        transition: background-color 0.3s ease; 
+    }
+
+     .btn-primary:hover {
+         background-color: #0056b3; 
+         cursor: pointer;
+     }
+
+     h2{
+         color:white;
+         margin-top:15px;
+     }
+
+</style>
+
+<h2 class="text-center">Currency Converter</h2>
+
+<div id="currencyDiv">
+    <form id="currencyConverterForm" >
+        <div class="mb-3">
+            <label for="Amount" class="form-label">Amount</label>
+            <input type="number" asp-for="Amount" class="form-control" id="Amount" step="0.01" placeholder="Enter amount" />
+        </div>
+
+        <div class="mb-3">
+            <label for="FromCurrency" class="form-label">From Currency</label>
+            <select id="FromCurrency" asp-for="FromCurrency" class="form-control"></select>
+        </div>
+
+        <div class="mb-3">
+            <label for="ToCurrency" class="form-label">To Currency</label>
+            <select id="ToCurrency" asp-for="ToCurrency" class="form-control"></select>
+        </div>
+
+        <div class="mb-3">
+            <label for="Result" class="form-label mr-5">Converted Amount:</label>
+            <label  id="Resultlabel" class="form-label ml-5"></label>
+           
+        </div>
+
+        <button type="submit" class="btn btn-primary btnConvert">Convert</button>
+    </form>
+</div>
+@if (Model.ConvertedAmount > 0)
+{
+    <div class="mt-3">
+        <h3>Converted Amount: @Model.ConvertedAmount</h3>
+    </div>
+}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+      $(document).ready(function () {
+          debugger
+          const currencies = JSON.parse(getCurrencies());
+          let fromCurrencyOptions = '';
+          let toCurrencyOptions = '';
+
+          currencies.forEach(currency => {
+              const currencyCode = currency.Currency;
+              const currencySymbol = currency.Symbol;
+              const currencyName = currency.Country;
+
+              fromCurrencyOptions += `<option value="${currencyCode}">${currencySymbol} ${currencyName} (${currencyCode})</option>`;
+              toCurrencyOptions += `<option value="${currencyCode}">${currencySymbol} ${currencyName} (${currencyCode})</option>`;
+          });
+
+          $('#FromCurrency').html(fromCurrencyOptions);
+          $('#ToCurrency').html(toCurrencyOptions);
+
+
+            $('.btnConvert').on('click', function (e) {
+        debugger;
+        e.preventDefault();  
+
+        const amount = $('#Amount').val();
+        const fromCurrency = $('#FromCurrency').val();
+        const toCurrency = $('#ToCurrency').val();
+        const apiKey = 'cc697982a80a8386e462d';  
+
+        if (amount && fromCurrency && toCurrency) {
+
+            $.ajax({
+                url: '/CurrencyConverter/Convert', 
+                type: 'POST',
+                data: {
+                    Amount: amount,
+                    FromCurrency: fromCurrency,
+                    ToCurrency: toCurrency,
+                    ApiKey: apiKey
+                },
+                success: function (response) {
+                   
+                    if (response.convertedAmount) {
+                     
+                        const symbol = response.symbol || ''; 
+                        $('#Resultlabel').html(`${response.convertedAmount} ${toCurrency}`);
+                    } else {
+                        alert('Error in conversion.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert('Error with AJAX request: ' + error);
+                }
+            });
+        } else {
+            alert('Please fill in all fields');
+        }
+    });
+
+
+      });
+</script>
+
